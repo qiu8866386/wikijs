@@ -202,6 +202,18 @@
                 //-   template(v-slot:activator='{ on }')
                 //-     v-btn(icon, tile, v-on='on', :aria-label='$t(`common:page.bookmark`)'): v-icon(color='grey') mdi-bookmark
                 //-   span {{$t('common:page.bookmark')}}
+                v-tooltip(bottom)
+                  template(#activator="{ on, attrs }")
+                    v-btn(
+                      color="primary"
+                      icon
+                      v-bind="attrs"
+                      v-on="on"
+                      @click="callOpenAI"
+                      aria-label="总结"
+                    )
+                      v-icon(font-size="24" color="#9e9e9e") mdi-file-chart-outline
+                  span 总结
                 v-menu(offset-y, bottom, min-width='300')
                   template(v-slot:activator='{ on: menu }')
                     v-tooltip(bottom)
@@ -227,7 +239,7 @@
             :order-xs1='tocPosition === `right`'
             :order-xs2='tocPosition !== `right`'
             )
-            v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasAnyPagePermissions && editShortcutsObj.editFab')
+            v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasAnyPagePermissions && editShortcutsObj && editShortcutsObj.editFab')
               template(v-slot:activator='{ on: onEditActivator }')
                 v-speed-dial(
                   v-model='pageEditFab'
@@ -337,6 +349,21 @@
     nav-footer
     notify
     search-results
+    // 添加对话框来显示 OpenAI 结果
+    v-dialog(v-model='aiDialog', max-width='800')
+      v-card
+        v-card-title
+          span.headline 总结
+          v-spacer
+          v-btn(icon, @click='aiDialog = false')
+            v-icon mdi-close
+        v-card-text
+          v-progress-linear(indeterminate, v-if='aiLoading')
+          div(v-else)
+            div.markdown-content(v-html='renderedResult || result')
+        v-card-actions
+          v-spacer
+          v-btn(color='primary', @click='aiDialog = false') 关闭
     v-fab-transition
       v-btn(
         v-if='upBtnShown'
@@ -366,6 +393,7 @@ import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
 import ClipboardJS from 'clipboard'
 import Vue from 'vue'
+// import { Configuration, OpenAIApi } from 'openai'
 
 Vue.component('Tabset', Tabset)
 
@@ -493,10 +521,16 @@ export default {
   },
   data() {
     return {
+      result: '',
       navShown: false,
       navExpanded: false,
       upBtnShown: false,
       pageEditFab: false,
+      innerText: '',
+      prompt: '',
+      // 添加对话框控制变量
+      aiDialog: false,
+      aiLoading: false,
       scrollOpts: {
         duration: 1500,
         offset: 0,
@@ -572,11 +606,122 @@ export default {
     },
     printView: sync('site/printView'),
     editMenuExternalUrl () {
-      if (this.editShortcutsObj.editMenuBar && this.editShortcutsObj.editMenuExternalBtn) {
+      // 添加安全检查，确保 editShortcutsObj 存在
+      if (this.editShortcutsObj && this.editShortcutsObj.editMenuBar && this.editShortcutsObj.editMenuExternalBtn) {
         return this.editShortcutsObj.editMenuExternalUrl.replace('{filename}', this.filename)
       } else {
         return ''
       }
+    },
+    renderedResult() {
+      // 如果有内容则尝试渲染为 Markdown
+      if (this.result) {
+        try {
+          // 使用 Wiki.js 自带的 markdownit 实例（如果存在）
+          if (window.wiki && window.wiki.$processor) {
+            return window.wiki.$processor.md.render(this.result)
+          }
+          // 否则尝试使用全局 markdownit（如果存在）
+          else if (window.markdownit) {
+            const md = window.markdownit({
+              html: true,
+              breaks: true,
+              linkify: true,
+              typographer: true
+            })
+            return md.render(this.result)
+          }
+          // 如果都没有，使用简单的文本转HTML处理
+          else {
+            // 转义 HTML 特殊字符
+            const escapeHtml = (text) => {
+              const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+              }
+              return text.replace(/[&<>"']/g, (m) => map[m])
+            }
+            // 简单的 Markdown 到 HTML 转换
+            let html = escapeHtml(this.result)
+            // 转换表格 (改进的表格解析)
+            const tableRegex = /((?:\|.*\|$\n)+)(?:\|[\s\-|:]+\|$\n)((?:\|.*\|$\n?)*)/gm
+            html = html.replace(tableRegex, (match, headerRow, dataRows) => {
+              let tableHtml = '<table class="markdown-table">'
+              // 处理表头
+              const headerLines = headerRow.trim().split('\n')
+              headerLines.forEach(line => {
+                if (line.trim()) {
+                  const headers = line.split('|').filter(h => h)
+                  if (headers.length > 0) {
+                    tableHtml += '<thead><tr>'
+                    headers.forEach(header => {
+                      tableHtml += `<th>${header.trim()}</th>`
+                    })
+                    tableHtml += '</tr></thead>'
+                  }
+                }
+              })
+              // 处理数据行
+              if (dataRows) {
+                tableHtml += '<tbody>'
+                const rows = dataRows.trim().split('\n')
+                rows.forEach(row => {
+                  if (row.trim()) {
+                    const cells = row.split('|').filter(c => c)
+                    if (cells.length > 0) {
+                      tableHtml += '<tr>'
+                      cells.forEach(cell => {
+                        tableHtml += `<td>${cell.trim()}</td>`
+                      })
+                      tableHtml += '</tr>'
+                    }
+                  }
+                })
+                tableHtml += '</tbody>'
+              }
+              tableHtml += '</table>'
+              return tableHtml
+            })
+            // 转换标题 (按级别从高到低，避免冲突)
+            html = html.replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+            html = html.replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+            html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            // 转换粗体
+            html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            // 转换斜体
+            html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            // 转换代码块（支持语言标识）
+            html = html.replace(/```(\w*)\n([\s\S]*?)\n```/gim, (match, lang, code) => {
+              const language = lang || 'plaintext'
+              return `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`
+            })
+            // 转换行内代码
+            html = html.replace(/`(.*?)`/gim, '<code>$1</code>')
+            // 转换链接
+            html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            // 转换列表
+            html = html.replace(/^[\-] (.*$)/gim, '<li>$1</li>')
+            html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>')
+            // 转换换行符为段落
+            html = html.replace(/\n\n/g, '</p><p>')
+            html = html.replace(/\n/g, '<br>')
+            html = `<p>${html}</p>`
+            return html
+          }
+        } catch (e) {
+          console.error('Markdown 渲染出错:', e)
+          // 出错时直接返回纯文本
+          return `<pre>${this.result}</pre>`
+        }
+      }
+      // 没有内容时返回空字符串
+      return ''
     }
   },
   created() {
@@ -602,6 +747,25 @@ export default {
     this.$store.set('page/mode', 'view')
   },
   mounted () {
+    // 修改prompt合并方式，将所有tag中的prompt合并成一个字符串
+    // 可以根据需要修改分隔符：
+    // 1. 使用 '\n' 单个换行符（默认）
+    // 2. 使用 '\n\n' 双换行符实现段落分隔
+    // 3. 使用 '\n---\n' 带分隔线的分隔符
+    // 4. 使用其他自定义分隔符
+    console.log(123456789, this.$props)
+
+    this.prompt = this.tags
+      .map((tag, i) => {
+        const text = tag.prompt?.trim()
+        if (!text) return '' // 跳过空的
+        return `第${i + 1}个提示词：${text}，`
+      })
+      .filter(str => str !== '')
+      .join('\n')
+    this.innerText = this.$refs.container.innerText
+    console.log('9999999999999999999', this.prompt)
+    // console.log('88888888888888888888', this.innerText)
     if (this.$vuetify.theme.dark) {
       this.scrollStyle.bar.background = '#424242'
     }
@@ -648,6 +812,44 @@ export default {
     })
   },
   methods: {
+    // 调用openAI,将提示词和文档内容传过去
+    async callOpenAI() {
+      // 显示对话框和加载状态
+      this.aiDialog = true
+      this.aiLoading = true
+
+      try {
+        const response = await fetch('/api/openai/summarize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            prompt: this.prompt, // 修复：传递整个prompt字符串而不是第一个字符
+            content: this.innerText
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+        this.result = data.result || data.text || JSON.stringify(data)
+      } catch (error) {
+        console.error('调用 OpenAI 出错:', error)
+        this.result = `错误：${error.message}`
+      } finally {
+        this.aiLoading = false
+
+        // 在结果渲染完成后高亮代码块
+        this.$nextTick(() => {
+          if (this.$el && typeof Prism !== 'undefined') {
+            Prism.highlightAllUnder(this.$el)
+          }
+        })
+      }
+    },
     goHome () {
       window.location.assign('/')
     },
@@ -789,4 +991,148 @@ export default {
   }
 }
 
+// 添加 Markdown 内容样式
+.markdown-content {
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.3rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 0.3rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+  }
+  h5 {
+    font-size: 1rem;
+  }
+  h6 {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+
+  ul, ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+  }
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+
+  pre {
+    background-color: #f5f5f5;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    tab-size: 4;
+
+    code {
+      background: none;
+      padding: 0;
+      font-family: 'Courier New', Courier, monospace;
+      white-space: pre;
+    }
+  }
+
+  code {
+    background-color: #f5f5f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  a {
+    color: #1976d2;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  blockquote {
+    border-left: 4px solid #ddd;
+    padding: 0 1rem;
+    margin: 1rem 0;
+    color: #666;
+  }
+  // 表格样式
+  .markdown-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 1rem;
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  }
+}
+
+.theme--dark {
+  .markdown-content {
+    h1, h2 {
+      border-bottom: 1px solid #444;
+    }
+    h6 {
+      color: #aaa;
+    }
+
+    pre {
+      background-color: #2d2d2d;
+      code {
+        color: #f8f8f2;
+      }
+    }
+
+    code {
+      background-color: #2d2d2d;
+    }
+
+    blockquote {
+      border-left: 4px solid #444;
+      color: #aaa;
+    }
+    // 暗色主题表格样式
+    .markdown-table {
+      th, td {
+        border: 1px solid #444;
+      }
+      th {
+        background-color: #333;
+      }
+      tr:nth-child(even) {
+        background-color: #2d2d2d;
+      }
+    }
+  }
+}
 </style>

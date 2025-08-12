@@ -18,7 +18,7 @@ module.exports = class Tag extends Model {
         id: {type: 'integer'},
         tag: {type: 'string'},
         title: {type: 'string'},
-
+        prompt: {type: 'string'}, // 解释：新增字段,存储Tag提示信息
         createdAt: {type: 'string'},
         updatedAt: {type: 'string'}
       }
@@ -61,7 +61,8 @@ module.exports = class Tag extends Model {
 
     const newTags = _.filter(tags, t => !_.some(existingTags, ['tag', t])).map(t => ({
       tag: t,
-      title: t
+      title: t,
+      prompt: ''
     }))
     if (newTags.length > 0) {
       if (WIKI.config.db.type === 'postgres') {

@@ -342,6 +342,7 @@ export default {
     }
   },
   mounted () {
+    console.log(1111111)
     this.isShown = true
     if (this.changePwdContinuationToken) {
       this.screen = 'changePwd'

@@ -134,6 +134,7 @@ module.exports = class Page extends Model {
   /**
    * Cache Schema
    */
+  // 返回pages的schema的缓存方式，返回JSON对象
   static get cacheSchema() {
     return new JSBinType({
       id: 'uint',
@@ -153,7 +154,8 @@ module.exports = class Page extends Model {
       tags: [
         {
           tag: 'string',
-          title: 'string'
+          title: 'string',
+          prompt: 'string'
         }
       ],
       extra: {
@@ -573,12 +575,12 @@ module.exports = class Page extends Model {
         }
 
       // -> HTML => Markdown
-      } else if (sourceContentType === 'html' && targetContentType === 'markdown') {
+      } else if (sourceContentType === 'html' && targetContentType === 'text') {
         const td = new TurndownService({
           bulletListMarker: '-',
           codeBlockStyle: 'fenced',
           emDelimiter: '*',
-          fence: '```',
+          fence: '``',
           headingStyle: 'atx',
           hr: '---',
           linkStyle: 'inlined',
@@ -1011,7 +1013,8 @@ module.exports = class Page extends Model {
         .joinRelated('creator')
         .withGraphJoined('tags')
         .modifyGraph('tags', builder => {
-          builder.select('tag', 'title')
+          // 将prompt字段加入到query
+          builder.select('tag', 'title', 'prompt')
         })
         .where(queryModeID ? {
           'pages.id': opts
@@ -1049,6 +1052,8 @@ module.exports = class Page extends Model {
    * @param {Object} page Page Model Instance
    * @returns {Promise} Promise with no value
    */
+
+  // 将pages数据保存到缓存
   static async savePageToCache(page) {
     const cachePath = path.resolve(WIKI.ROOTPATH, WIKI.config.dataPath, `cache/${page.hash}.bin`)
     await fs.outputFile(cachePath, WIKI.models.pages.cacheSchema.encode({
@@ -1070,7 +1075,7 @@ module.exports = class Page extends Model {
       publishStartDate: page.publishStartDate,
       contentType: page.contentType,
       render: page.render,
-      tags: page.tags.map(t => _.pick(t, ['tag', 'title'])),
+      tags: page.tags.map(t => _.pick(t, ['tag', 'title', 'prompt'])),
       title: page.title,
       toc: _.isString(page.toc) ? page.toc : JSON.stringify(page.toc),
       updatedAt: page.updatedAt

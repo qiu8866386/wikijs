@@ -30,6 +30,12 @@ module.exports = async () => {
   const ctrl = autoload(path.join(WIKI.SERVERPATH, '/controllers'))
 
   // ----------------------------------------
+  // Load OpenAI controller manually
+  // ----------------------------------------
+
+  ctrl.openai = require('./controllers/openai')
+
+  // ----------------------------------------
   // Define Express App
   // ----------------------------------------
 
@@ -52,7 +58,7 @@ module.exports = async () => {
   // Public Assets
   // ----------------------------------------
 
-  app.use(favicon(path.join(WIKI.ROOTPATH, 'assets', 'favicon.ico')))
+  app.use(favicon(path.join(WIKI.ROOTPATH, 'client', 'static', 'favicon.ico')))
   app.use('/_assets/svg/twemoji', async (req, res, next) => {
     try {
       WIKI.asar.serve('twemoji', req, res, next)
@@ -165,6 +171,7 @@ module.exports = async () => {
   app.use('/', ctrl.auth)
   app.use('/', ctrl.upload)
   app.use('/', ctrl.common)
+  app.use('/api/openai', ctrl.openai)
 
   // ----------------------------------------
   // Error handling

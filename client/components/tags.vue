@@ -270,6 +270,7 @@ export default {
     toggleTag (tag) {
       if (_.includes(this.selection, tag)) {
         this.selection = _.without(this.selection, tag)
+        console.log(888888, this.selection)
       } else {
         this.selection.push(tag)
       }

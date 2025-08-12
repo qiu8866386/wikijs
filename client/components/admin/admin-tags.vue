@@ -69,8 +69,17 @@
                       :label='$t("tags.label")'
                       prepend-icon='mdi-format-title'
                       v-model='current.title'
+                      counter='255'
+                    )
+                    //- 加入提示词输入框
+                    v-text-field(
+                      outlined
+                      :label='$t("提示词")'
+                      prepend-icon='mdi-lightbulb'
+                      v-model='current.prompt'
                       hide-details
                     )
+
                   v-card-chin
                     i18next.caption.pl-3(path='admin:tags.date', tag='div')
                       strong(place='created') {{current.createdAt | moment('from')}}
@@ -122,6 +131,7 @@ export default {
   methods: {
     selectTag(tag) {
       this.current = tag
+      console.log(777777, this.current)
     },
     async deleteTag(tag) {
       this.$store.commit(`loadingStart`, 'admin-tags-delete')
@@ -162,13 +172,14 @@ export default {
       this.$store.commit(`loadingStop`, 'admin-tags-delete')
     },
     async saveTag(tag) {
+      // 保存prompt字段的数据
       this.$store.commit(`loadingStart`, 'admin-tags-save')
       try {
         const resp = await this.$apollo.mutate({
           mutation: gql`
-            mutation ($id: Int!, $tag: String!, $title: String!) {
+            mutation ($id: Int!, $tag: String!, $title: String!, $prompt: String!) {
               pages {
-                updateTag (id: $id, tag: $tag, title: $title) {
+                updateTag (id: $id, tag: $tag, title: $title, prompt: $prompt) {
                   responseResult {
                     succeeded
                     errorCode
@@ -182,7 +193,9 @@ export default {
           variables: {
             id: tag.id,
             tag: tag.tag,
-            title: tag.title
+            title: tag.title,
+            // 添加prompt字段
+            prompt: tag.prompt
           }
         })
         if (_.get(resp, 'data.pages.updateTag.responseResult.succeeded', false)) {
@@ -192,6 +205,35 @@ export default {
             icon: 'check'
           })
           this.current.updatedAt = new Date()
+          // 刷新标签列表以确保获取最新数据
+          await this.$apollo.queries.tags.refetch()
+
+          // 同时刷新服务器端缓存
+          try {
+            await this.$apollo.mutate({
+              mutation: gql`
+                mutation {
+                  pages {
+                    flushCache {
+                      responseResult {
+                        succeeded
+                        errorCode
+                        slug
+                        message
+                      }
+                    }
+                  }
+                }
+              `
+            })
+          } catch (cacheErr) {
+            console.warn('Failed to flush server cache:', cacheErr)
+          }
+          // 刷新整个页面以确保所有组件都能获取到最新数据
+          // 使用 setTimeout 确保在所有操作完成后才刷新页面
+          setTimeout(() => {
+            window.location.reload()
+          }, 100)
         } else {
           throw new Error(_.get(resp, 'data.pages.updateTag.responseResult.message', 'An unexpected error occurred.'))
         }
@@ -212,6 +254,7 @@ export default {
   },
   apollo: {
     tags: {
+      // 将prompt放入标签列表中
       query: gql`
         {
           pages {
@@ -219,6 +262,7 @@ export default {
               id
               tag
               title
+              prompt
               createdAt
               updatedAt
             }

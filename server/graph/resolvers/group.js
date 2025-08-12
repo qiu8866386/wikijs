@@ -2,6 +2,7 @@ const graphHelper = require('../../helpers/graph')
 const safeRegex = require('safe-regex')
 const _ = require('lodash')
 const gql = require('graphql')
+console.log('loaded 230', gql)
 
 /* global WIKI */
 

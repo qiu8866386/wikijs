@@ -173,8 +173,8 @@ module.exports = {
     async singleByPath(obj, args, context, info) {
       let page = await WIKI.models.pages.getPageFromDb({
         path: args.path,
-        locale: args.locale,
-      });
+        locale: args.locale
+      })
       if (page) {
         if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages'], {
           path: page.path,
@@ -500,7 +500,8 @@ module.exports = {
           .findById(args.id)
           .patch({
             tag: _.trim(args.tag).toLowerCase(),
-            title: _.trim(args.title)
+            title: _.trim(args.title),
+            prompt: _.trim(args.prompt)
           })
         if (affectedRows < 1) {
           throw new Error('This tag does not exist.')

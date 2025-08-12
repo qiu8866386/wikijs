@@ -136,6 +136,7 @@
     "node-cache": "5.1.2",
     "nodemailer": "6.9.1",
     "objection": "2.2.18",
+    "openai": "5.12.2",
     "passport": "0.4.1",
     "passport-auth0": "1.4.3",
     "passport-azure-ad": "4.3.4",
