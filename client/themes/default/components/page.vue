@@ -209,11 +209,24 @@
                       icon
                       v-bind="attrs"
                       v-on="on"
-                      @click="callOpenAI"
-                      aria-label="总结"
+                      @click="viewAiSummary"
+                      aria-label="查看AI总结"
                     )
                       v-icon(font-size="24" color="#9e9e9e") mdi-file-chart-outline
-                  span 总结
+                  span 查看AI总结
+                <!-- 添加一个测试按钮用于调试 -->
+                //- v-tooltip(bottom)
+                //-   template(#activator="{ on, attrs }")
+                //-     v-btn(
+                //-       color="secondary"
+                //-       icon
+                //-       v-bind="attrs"
+                //-       v-on="on"
+                //-       @click="showAiContent"
+                //-       aria-label="测试AI内容"
+                //-     )
+                //-       v-icon(font-size="24" color="#9e9e9e") mdi-test-tube
+                //-   span 测试AI内容
                 v-menu(offset-y, bottom, min-width='300')
                   template(v-slot:activator='{ on: menu }')
                     v-tooltip(bottom)
@@ -231,7 +244,19 @@
                       v-icon(:color='printView ? `primary` : `grey`') mdi-printer
                   span {{$t('common:page.printFormat')}}
                 v-spacer
-
+                v-tooltip(bottom)
+                  template(#activator="{ on, attrs }")
+                    v-btn(
+                      color="primary"
+                      icon
+                      v-bind="attrs"
+                      v-on="on"
+                      @click="callOpenAI"
+                      aria-label="生成AI总结"
+                    )
+                      v-icon(font-size="24" color="#9e9e9e") mdi-file-chart-outline
+                  span 生成AI总结
+                v-spacer
           v-flex.page-col-content(
             xs12
             :lg9='tocPosition !== `off`'
@@ -353,7 +378,7 @@
     v-dialog(v-model='aiDialog', max-width='800')
       v-card
         v-card-title
-          span.headline 总结
+          span.headline 生成AI总结
           v-spacer
           v-btn(icon, @click='aiDialog = false')
             v-icon mdi-close
@@ -517,6 +542,10 @@ export default {
     filename: {
       type: String,
       default: ''
+    },
+    aiContent: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -620,9 +649,7 @@ export default {
           // 使用 Wiki.js 自带的 markdownit 实例（如果存在）
           if (window.wiki && window.wiki.$processor) {
             return window.wiki.$processor.md.render(this.result)
-          }
-          // 否则尝试使用全局 markdownit（如果存在）
-          else if (window.markdownit) {
+          } else if (window.markdownit) {
             const md = window.markdownit({
               html: true,
               breaks: true,
@@ -630,9 +657,7 @@ export default {
               typographer: true
             })
             return md.render(this.result)
-          }
-          // 如果都没有，使用简单的文本转HTML处理
-          else {
+          } else {
             // 转义 HTML 特殊字符
             const escapeHtml = (text) => {
               const map = {
@@ -706,7 +731,7 @@ export default {
             // 转换链接
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
             // 转换列表
-            html = html.replace(/^[\-] (.*$)/gim, '<li>$1</li>')
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>')
             html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>')
             // 转换换行符为段落
             html = html.replace(/\n\n/g, '</p><p>')
@@ -747,6 +772,9 @@ export default {
     this.$store.set('page/mode', 'view')
   },
   mounted () {
+    // 添加调试日志，检查aiContent是否正确传递
+    // console.log('Page component props:', this.$props)
+    // console.log('AI Content value:', this.aiContent)
     // 修改prompt合并方式，将所有tag中的prompt合并成一个字符串
     // 可以根据需要修改分隔符：
     // 1. 使用 '\n' 单个换行符（默认）
@@ -754,7 +782,6 @@ export default {
     // 3. 使用 '\n---\n' 带分隔线的分隔符
     // 4. 使用其他自定义分隔符
     console.log(123456789, this.$props)
-
     this.prompt = this.tags
       .map((tag, i) => {
         const text = tag.prompt?.trim()
@@ -764,7 +791,7 @@ export default {
       .filter(str => str !== '')
       .join('\n')
     this.innerText = this.$refs.container.innerText
-    console.log('9999999999999999999', this.prompt)
+    // console.log('9999999999999999999', this.prompt)
     // console.log('88888888888888888888', this.innerText)
     if (this.$vuetify.theme.dark) {
       this.scrollStyle.bar.background = '#424242'
@@ -812,6 +839,96 @@ export default {
     })
   },
   methods: {
+    // 查看AI总结
+    async viewAiSummary() {
+      // 显示加载状态
+      this.aiLoading = true
+      this.result = '正在更新缓存数据...'
+      this.aiDialog = true
+      try {
+        // 检查必要的参数是否存在
+        if (!this.pageId) {
+          throw new Error('缺少必要的参数: pageId')
+        }
+
+        // 通过GraphQL重新获取页面数据以更新缓存
+        const query = `
+          query ($pageId: Int!) {
+            pages {
+              single(id: $pageId) {
+                id
+                title
+                description
+                content
+                aiContent
+                createdAt
+                updatedAt
+                authorId
+                authorName
+                isPublished
+                tags {
+                  tag
+                  title
+                }
+              }
+            }
+          }
+        `
+
+        const response = await fetch('/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            query,
+            variables: { pageId: this.pageId }
+          })
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (data.errors) {
+          console.error('GraphQL errors:', data.errors)
+          throw new Error(data.errors[0].message)
+        }
+
+        // 检查返回的数据结构
+        if (!data.data || !data.data.pages || !data.data.pages.single) {
+          throw new Error('返回的数据结构不正确')
+        }
+
+        // 从新获取的数据中提取AI内容
+        const pageData = data.data.pages.single
+        this.result = pageData.aiContent || '暂无AI总结内容'
+      } catch (error) {
+        console.error('更新缓存数据出错:', error)
+        this.result = `更新缓存数据失败: ${error.message}`
+
+        // 即使出错也尝试显示已有的aiContent
+        if (this.aiContent) {
+          this.result = this.aiContent
+        }
+      } finally {
+        this.aiLoading = false
+
+        // 在结果渲染完成后高亮代码块
+        this.$nextTick(() => {
+          if (this.$el && typeof Prism !== 'undefined') {
+            Prism.highlightAllUnder(this.$el)
+          }
+        })
+      }
+    },
+    // 添加测试方法显示AI内容
+    // showAiContent() {
+    //   console.log('AI Content:', this.aiContent);
+    //   alert('AI Content: ' + this.aiContent || 'No AI content available');
+    // },
     // 调用openAI,将提示词和文档内容传过去
     async callOpenAI() {
       // 显示对话框和加载状态
@@ -825,8 +942,9 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            prompt: this.prompt, // 修复：传递整个prompt字符串而不是第一个字符
-            content: this.innerText
+            prompt: this.prompt,
+            content: this.innerText,
+            pageId: this.$props.pageId // 添加页面ID
           })
         })
 

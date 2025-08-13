@@ -161,7 +161,8 @@ module.exports = {
             locale: page.localeCode,
             editor: page.editorKey,
             scriptJs: page.extra.js,
-            scriptCss: page.extra.css
+            scriptCss: page.extra.css,
+            aiContent: page.aiContent
           }
         } else {
           throw new WIKI.Error.PageViewForbidden()
@@ -185,7 +186,8 @@ module.exports = {
             locale: page.localeCode,
             editor: page.editorKey,
             scriptJs: page.extra.js,
-            scriptCss: page.extra.css
+            scriptCss: page.extra.css,
+            aiContent: page.aiContent
           }
         } else {
           throw new WIKI.Error.PageViewForbidden()

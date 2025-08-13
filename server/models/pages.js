@@ -164,7 +164,8 @@ module.exports = class Page extends Model {
       },
       title: 'string',
       toc: 'string',
-      updatedAt: 'string'
+      updatedAt: 'string',
+      aiContent: 'string'
     })
   }
 
@@ -1002,6 +1003,7 @@ module.exports = class Page extends Model {
           'pages.authorId',
           'pages.creatorId',
           'pages.extra',
+          'pages.aiContent',
           {
             authorName: 'author.name',
             authorEmail: 'author.email',
@@ -1078,7 +1080,8 @@ module.exports = class Page extends Model {
       tags: page.tags.map(t => _.pick(t, ['tag', 'title', 'prompt'])),
       title: page.title,
       toc: _.isString(page.toc) ? page.toc : JSON.stringify(page.toc),
-      updatedAt: page.updatedAt
+      updatedAt: page.updatedAt,
+      aiContent: page.aiContent
     }))
   }
 

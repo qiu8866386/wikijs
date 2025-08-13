@@ -98,6 +98,7 @@ type PageMutation {
     scriptJs: String
     tags: [String]!
     title: String!
+    aiContent:String
   ): PageResponse @auth(requires: ["write:pages", "manage:pages", "manage:system"])
 
   update(
@@ -115,6 +116,7 @@ type PageMutation {
     scriptJs: String
     tags: [String]
     title: String
+    aiContent: String
   ): PageResponse @auth(requires: ["write:pages", "manage:pages", "manage:system"])
 
   convert(
@@ -198,6 +200,7 @@ type Page {
   contentType: String!
   createdAt: Date!
   updatedAt: Date!
+  aiContent: String
   editor: String! @auth(requires: ["write:pages", "manage:system"])
   locale: String!
   scriptCss: String
@@ -249,6 +252,7 @@ type PageVersion {
   tags: [String]!
   title: String!
   versionId: Int!
+  aiContent: String
 }
 
 type PageHistoryResult {
@@ -283,6 +287,7 @@ type PageListItem {
   createdAt: Date!
   updatedAt: Date!
   tags: [String]
+  aiContent: String
 }
 
 type PageTreeItem {
@@ -296,6 +301,7 @@ type PageTreeItem {
   parent: Int
   pageId: Int
   locale: String!
+  aiContent: String
 }
 
 type PageLinkItem {
@@ -318,6 +324,7 @@ type PageConflictLatest {
   tags: [String]
   title: String!
   updatedAt: Date!
+  aiContent: String
 }
 
 enum PageOrderBy {

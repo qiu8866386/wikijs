@@ -581,4 +581,40 @@ router.get('/*', async (req, res, next) => {
   }
 })
 
+// 在页面更新逻辑中添加大模型数据保存
+router.post('/save-ai-data', async (req, res) => {
+  const pageId = req.body.pageId
+  const aiData = req.body.content
+
+  try {
+    // 获取页面权限
+    const page = await WIKI.models.pages.query().findById(pageId)
+    if (!page) {
+      return res.status(404).json({ error: 'Page not found' })
+    }
+
+    // 检查用户权限
+    if (!WIKI.auth.checkAccess(req.user, ['write:pages'], {
+      locale: page.localeCode,
+      path: page.path
+    })) {
+      return res.status(403).json({ error: 'Permission denied' })
+    }
+
+    // 更新指定字段
+    await WIKI.models.pages.query().patch({
+      content: aiData // 将content字段替换为你的目标字段
+    }).where('id', pageId)
+
+    // 更新时间戳
+    await WIKI.models.pages.query().patch({
+      updatedAt: new Date().toISOString()
+    }).where('id', pageId)
+
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 module.exports = router
