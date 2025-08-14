@@ -375,10 +375,10 @@
     notify
     search-results
     // 添加对话框来显示 OpenAI 结果
-    v-dialog(v-model='aiDialog', max-width='800')
+    v-dialog(v-model='aiDialog', max-width='800',class="ai-summary-dialog")
       v-card
         v-card-title
-          span.headline 生成AI总结
+          span.headline {{ aiDialogTitle }}
           v-spacer
           v-btn(icon, @click='aiDialog = false')
             v-icon mdi-close
@@ -559,6 +559,8 @@ export default {
       prompt: '',
       // 添加对话框控制变量
       aiDialog: false,
+      aiDialogTitle: '生成AI总结',
+      aiDialogMode: 'generate', // 添加AI对话框模式，'view'表示查看，'generate'表示生成
       aiLoading: false,
       scrollOpts: {
         duration: 1500,
@@ -643,22 +645,31 @@ export default {
       }
     },
     renderedResult() {
-      // 如果有内容则尝试渲染为 Markdown
       if (this.result) {
         try {
-          // 使用 Wiki.js 自带的 markdownit 实例（如果存在）
+          // ===== 代码块 HTML 转义保护 =====
+          const fencedCodeRegex = /```(\w*)\n([\s\S]*?)\n```/g
+          const protectedResult = this.result.replace(fencedCodeRegex, (match, lang, code) => {
+            const safeCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            return `\`\`\`${lang}\n${safeCode}\n\`\`\``
+          })
+
+          // ===== 使用 Wiki.js 自带的 markdown-it 渲染 =====
           if (window.wiki && window.wiki.$processor) {
-            return window.wiki.$processor.md.render(this.result)
+            return window.wiki.$processor.md.render(protectedResult)
+
+            // ===== 使用全局 markdown-it 渲染 =====
           } else if (window.markdownit) {
             const md = window.markdownit({
-              html: true,
+              html: true, // 保留 HTML 渲染
               breaks: true,
               linkify: true,
               typographer: true
             })
-            return md.render(this.result)
+            return md.render(protectedResult)
+
+            // ===== 手动 Markdown 转 HTML =====
           } else {
-            // 转义 HTML 特殊字符
             const escapeHtml = (text) => {
               const map = {
                 '&': '&amp;',
@@ -669,13 +680,13 @@ export default {
               }
               return text.replace(/[&<>"']/g, (m) => map[m])
             }
-            // 简单的 Markdown 到 HTML 转换
-            let html = escapeHtml(this.result)
-            // 转换表格 (改进的表格解析)
+
+            let html = escapeHtml(protectedResult)
+
+            // 表格转换
             const tableRegex = /((?:\|.*\|$\n)+)(?:\|[\s\-|:]+\|$\n)((?:\|.*\|$\n?)*)/gm
             html = html.replace(tableRegex, (match, headerRow, dataRows) => {
               let tableHtml = '<table class="markdown-table">'
-              // 处理表头
               const headerLines = headerRow.trim().split('\n')
               headerLines.forEach(line => {
                 if (line.trim()) {
@@ -689,7 +700,6 @@ export default {
                   }
                 }
               })
-              // 处理数据行
               if (dataRows) {
                 tableHtml += '<tbody>'
                 const rows = dataRows.trim().split('\n')
@@ -710,42 +720,47 @@ export default {
               tableHtml += '</table>'
               return tableHtml
             })
-            // 转换标题 (按级别从高到低，避免冲突)
+
+            // 标题
             html = html.replace(/^###### (.*$)/gim, '<h6>$1</h6>')
             html = html.replace(/^##### (.*$)/gim, '<h5>$1</h5>')
             html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>')
             html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>')
             html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>')
             html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            // 转换粗体
+
+            // 粗体 & 斜体
             html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            // 转换斜体
             html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>')
-            // 转换代码块（支持语言标识）
+
+            // 代码块
             html = html.replace(/```(\w*)\n([\s\S]*?)\n```/gim, (match, lang, code) => {
               const language = lang || 'plaintext'
               return `<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`
             })
-            // 转换行内代码
+
+            // 行内代码
             html = html.replace(/`(.*?)`/gim, '<code>$1</code>')
-            // 转换链接
+
+            // 链接
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
-            // 转换列表
+
+            // 列表
             html = html.replace(/^- (.+)$/gm, '<li>$1</li>')
             html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>')
-            // 转换换行符为段落
+
+            // 换行处理
             html = html.replace(/\n\n/g, '</p><p>')
             html = html.replace(/\n/g, '<br>')
+
             html = `<p>${html}</p>`
             return html
           }
         } catch (e) {
           console.error('Markdown 渲染出错:', e)
-          // 出错时直接返回纯文本
           return `<pre>${this.result}</pre>`
         }
       }
-      // 没有内容时返回空字符串
       return ''
     }
   },
@@ -841,6 +856,8 @@ export default {
   methods: {
     // 查看AI总结
     async viewAiSummary() {
+      // 设置对话框标题
+      this.aiDialogTitle = '查看AI总结'
       // 显示加载状态
       this.aiLoading = true
       this.result = '正在更新缓存数据...'
@@ -931,6 +948,8 @@ export default {
     // },
     // 调用openAI,将提示词和文档内容传过去
     async callOpenAI() {
+      // 设置对话框标题
+      this.aiDialogTitle = '生成AI总结'
       // 显示对话框和加载状态
       this.aiDialog = true
       this.aiLoading = true
@@ -1216,41 +1235,112 @@ export default {
 }
 
 .theme--dark {
-  .markdown-content {
-    h1, h2 {
-      border-bottom: 1px solid #444;
+  .breadcrumbs-nav {
+    .v-btn {
+      color: #FFF;
     }
-    h6 {
-      color: #aaa;
-    }
-
-    pre {
-      background-color: #2d2d2d;
-      code {
-        color: #f8f8f2;
-      }
-    }
-
-    code {
-      background-color: #2d2d2d;
-    }
-
-    blockquote {
-      border-left: 4px solid #444;
-      color: #aaa;
-    }
-    // 暗色主题表格样式
-    .markdown-table {
-      th, td {
-        border: 1px solid #444;
-      }
-      th {
-        background-color: #333;
-      }
-      tr:nth-child(even) {
-        background-color: #2d2d2d;
+  }
+  .page-header-section {
+    .page-header-headings {
+      .headline {
+        color: #FFF;
       }
     }
   }
+  .page-edit-shortcuts {
+    .v-btn {
+      background-color: #222 !important;
+      border-right-color: #444 !important;
+      border-bottom-color: #444 !important;
+      color: #CCC;
+    }
+  }
+  .page-col-sd {
+    background-color: #333;
+  }
+  .comments-container {
+    .comments-header {
+      color: #FFF;
+    }
+  }
+  .v-dialog {
+    .markdown-content {
+      code[class*="language-"],
+      pre[class*="language-"] {
+        background: hsl(30, 20%, 25%) !important;
+        color: white !important;
+        text-shadow: 0 -.1em .2em black !important;
+      }
+      pre[class*="language-"] {
+        border: .3em solid hsl(30, 20%, 40%) !important;
+        box-shadow: 1px 1px .5em black inset !important;
+        margin: .5em 0 !important;
+        padding: 1em !important;
+        overflow: auto !important;
+      }
+      :not(pre) > code[class*="language-"] {
+        border: .13em solid hsl(30, 20%, 40%) !important;
+        box-shadow: 1px 1px .3em -.1em black inset !important;
+        padding: .15em .2em .05em !important;
+        white-space: normal !important;
+      }
+      code {
+        background-color: hsl(30, 20%, 25%) !important;
+        color: #f8f8f2 !important;
+      }
+    }
+    @at-root .theme--dark & {
+      .markdown-content {
+        code:not([class*="language-"]) {
+          background-color: hsl(30, 20%, 25%) !important;
+          color: #f8f8f2 !important;
+        }
+      }
+    }
+    // 添加更通用和具体的代码块样式以确保所有代码块都有暗色主题样式
+    pre,
+    .markdown-content pre {
+      background-color: hsl(30, 20%, 25%) !important;
+      border: .3em solid hsl(30, 20%, 40%) !important;
+      box-shadow: 1px 1px .5em black inset !important;
+      color: white !important;
+      code,
+      .markdown-content code {
+        background: none !important;
+        color: white !important;
+      }
+    }
+    code:not([class*="language-"]),
+    .markdown-content code:not([class*="language-"]) {
+      background-color: hsl(30, 20%, 25%) !important;
+      color: #f8f8f2 !important;
+    }
+    // 特别针对普通pre和code元素的暗色主题样式
+    pre:not([class*="language-"]) {
+      background-color: hsl(30, 20%, 25%) !important;
+      border: .3em solid hsl(30, 20%, 40%) !important;
+      box-shadow: 1px 1px .5em black inset !important;
+      color: white !important;
+      padding: 1rem !important;
+      border-radius: 4px !important;
+      overflow-x: auto !important;
+      code {
+        background: none !important;
+        color: white !important;
+        padding: 0 !important;
+      }
+    }
+  }
+.ai-summary-dialog pre[class*="language-"],
+.ai-summary-dialog code[class*="language-"] {
+  background-color: #1e1e1e !important; /* 深色背景 */
+  color: #dcdcdc !important;           /* 浅色字体 */
 }
-</style>
+
+/* 如果需要滚动条样式 */
+.ai-summary-dialog pre {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: 6px;
+}
+}
