@@ -1,5 +1,5 @@
 {
-  "name": "wiki",
+  "name": "智能AI文档管理平台",
   "version": "2.0.0",
   "releaseDate": "2019-01-01T01:01:01.000Z",
   "description": "A modern, lightweight and powerful wiki app built on NodeJS, Git and Markdown",

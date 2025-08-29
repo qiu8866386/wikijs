@@ -68,25 +68,25 @@ export default {
           icon: 'mdi-database-refresh',
           i18nKey: 'cache',
           isAvailable: true
-        },
+        }
         // {
         //   key: 'UtilityGraphEndpoint',
         //   icon: 'mdi-graphql',
         //   i18nKey: 'graphEndpoint',
         //   isAvailable: false
         // },
-        {
-          key: 'UtilityImportv1',
-          icon: 'mdi-database-import',
-          i18nKey: 'importv1',
-          isAvailable: true
-        },
-        {
-          key: 'UtilityTelemetry',
-          icon: 'mdi-math-compass',
-          i18nKey: 'telemetry',
-          isAvailable: true
-        }
+        // {
+        //   key: 'UtilityImportv1',
+        //   icon: 'mdi-database-import',
+        //   i18nKey: 'importv1',
+        //   isAvailable: true
+        // },
+        // {
+        //   key: 'UtilityTelemetry',
+        //   icon: 'mdi-math-compass',
+        //   i18nKey: 'telemetry',
+        //   isAvailable: true
+        // }
       ]
     }
   }

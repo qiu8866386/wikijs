@@ -6,7 +6,7 @@
           img.animated.fadeInUp(src='/_assets/svg/icon-line-chart.svg', alt='Analytics', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{ $t('admin:analytics.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:analytics.subtitle') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('将分析和跟踪工具添加到 智能AI文档管理平台') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p2s.mr-3(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh

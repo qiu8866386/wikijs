@@ -47,6 +47,8 @@ module.exports = class Page extends Model {
         publishEndDate: {type: 'string'},
         content: {type: 'string'},
         contentType: {type: 'string'},
+        aiContent: {type: 'string', default: ''},
+        // aiContentAt: {type: 'string', default: ''},
 
         createdAt: {type: 'string'},
         updatedAt: {type: 'string'}
@@ -165,7 +167,7 @@ module.exports = class Page extends Model {
       title: 'string',
       toc: 'string',
       updatedAt: 'string',
-      aiContent: 'string'
+      'aiContent?': 'string'// 添加aiContent字段到缓存模式，使用?表示可选字段
     })
   }
 
@@ -1081,7 +1083,7 @@ module.exports = class Page extends Model {
       title: page.title,
       toc: _.isString(page.toc) ? page.toc : JSON.stringify(page.toc),
       updatedAt: page.updatedAt,
-      aiContent: page.aiContent
+      aiContent: _.get(page, 'aiContent', null) // 添加 aiContent 字段到缓存数据
     }))
   }
 
@@ -1102,7 +1104,8 @@ module.exports = class Page extends Model {
         ...page,
         path: opts.path,
         localeCode: opts.locale,
-        isPrivate: opts.isPrivate
+        isPrivate: opts.isPrivate,
+        aiContent: page.aiContent || null // 确保 aiContent 字段正确返回
       }
     } catch (err) {
       if (err.code === 'ENOENT') {

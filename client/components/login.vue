@@ -791,4 +791,10 @@ export default {
       }
     }
   }
+  .login-logo{
+    background-color: #cccfde !important;
+  }
+  .login-title{
+    padding-left: 0px !important;
+  }
 </style>

@@ -152,7 +152,7 @@ module.exports = {
     async single (obj, args, context, info) {
       let page = await WIKI.models.pages.getPageFromDb(args.id)
       if (page) {
-        if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages'], {
+        if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages', 'read:pages'], {
           path: page.path,
           locale: page.localeCode
         })) {
@@ -177,7 +177,7 @@ module.exports = {
         locale: args.locale
       })
       if (page) {
-        if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages'], {
+        if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages', 'read:pages'], {
           path: page.path,
           locale: page.localeCode
         })) {
@@ -374,7 +374,7 @@ module.exports = {
     async conflictLatest (obj, args, context, info) {
       let page = await WIKI.models.pages.getPageFromDb(args.id)
       if (page) {
-        if (WIKI.auth.checkAccess(context.req.user, ['write:pages', 'manage:pages'], {
+        if (WIKI.auth.checkAccess(context.req.user, ['write:pages', 'manage:pages', 'read:pages'], {
           path: page.path,
           locale: page.localeCode
         })) {

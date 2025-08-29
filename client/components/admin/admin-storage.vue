@@ -8,8 +8,8 @@
             .headline.primary--text.animated.fadeInLeft {{$t('admin:storage.title')}}
             .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{$t('admin:storage.subtitle')}}
           v-spacer
-          v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/storage', target='_blank')
-            v-icon mdi-help-circle
+          //- v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/storage', target='_blank')
+          //-   v-icon mdi-help-circle
           v-btn.mx-3.animated.fadeInDown.wait-p2s(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
           v-btn.animated.fadeInDown(color='success', @click='save', depressed, large)
@@ -95,10 +95,10 @@
           v-card-info(color='blue')
             div
               div {{target.description}}
-              span.caption: a(:href='target.website') {{target.website}}
+              //- span.caption: a(:href='target.website') {{target.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='target.logo', :alt='target.title')
+              //- img(:src='target.logo', :alt='target.title')
           v-card-text
             v-form
               i18next.body-2(path='admin:storage.targetState', tag='div', v-if='target.isEnabled')

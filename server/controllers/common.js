@@ -419,6 +419,11 @@ router.get('/*', async (req, res, next) => {
   const pageArgs = pageHelper.parsePath(req.path, { stripExt })
   const isPage = (stripExt || pageArgs.path.indexOf('.') === -1)
 
+  // 如果访问根路径且用户未登录，则重定向到登录页面
+  if (pageArgs.path === 'home' && req.user.id === 2) {
+    return res.redirect('/login')
+  }
+
   if (isPage) {
     if (WIKI.config.lang.namespacing && !pageArgs.explicitLocale) {
       const query = !_.isEmpty(req.query) ? `?${qs.stringify(req.query)}` : ''
