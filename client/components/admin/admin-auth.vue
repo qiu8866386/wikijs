@@ -6,10 +6,10 @@
           img.animated.fadeInUp(src='/_assets/svg/icon-unlock.svg', alt='Authentication', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{ $t('admin:auth.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:auth.subtitle') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('配置智能AI文档管理平台的身份验证方式') }}
           v-spacer
-          v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/auth', target='_blank')
-            v-icon mdi-help-circle
+          //- v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/auth', target='_blank')
+          //-   v-icon mdi-help-circle
           v-btn.animated.fadeInDown.wait-p2s.mx-3(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
           v-btn.animated.fadeInDown(color='success', @click='save', depressed, large)
@@ -68,13 +68,13 @@
             v-btn(small, outlined, dark, color='white', :disabled='strategy.key === `local`', @click='deleteStrategy()')
               v-icon(left) mdi-close
               span {{$t('common:actions.delete')}}
-          v-card-info(color='blue')
-            div
-              span {{strategy.strategy.description}}
-              .caption: a(:href='strategy.strategy.website') {{strategy.strategy.website}}
-            v-spacer
-            .admin-providerlogo
-              img(:src='strategy.strategy.logo', :alt='strategy.strategy.title')
+          //- v-card-info(color='blue')
+          //-   div
+          //-     span {{strategy.strategy.description}}
+              //- .caption: a(:href='strategy.strategy.website') {{strategy.strategy.website}}
+            //- v-spacer
+            //- .admin-providerlogo
+            //-   img(:src='strategy.strategy.logo', :alt='strategy.strategy.title')
           v-card-text
             .row
               .col-8

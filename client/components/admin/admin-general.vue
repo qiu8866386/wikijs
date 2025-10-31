@@ -6,7 +6,7 @@
           img.animated.fadeInUp(src='/_assets/svg/icon-categorize.svg', alt='General', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{ $t('admin:general.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:general.subtitle') }}
+            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('智能AI文档管理平台的核心设置') }}
           v-spacer
           v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
@@ -27,7 +27,7 @@
                       :counter='255'
                       v-model='config.host'
                       prepend-icon='mdi-label-variant-outline'
-                      :hint='$t(`admin:general.siteUrlHint`)'
+                      hint="输入您 站点的完整 URL，无需键入尾部斜杠。例如：https://yourdomain.com"
                       persistent-hint
                       )
                     v-text-field.mt-3(

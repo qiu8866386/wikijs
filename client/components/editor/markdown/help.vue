@@ -116,17 +116,17 @@
                   v-icon.mr-3(color='teal') mdi-information-variant
                   .body-2.teal--text Markdown Reference (continued)
               .body-2.mt-3 Links
-              v-layout(row)
-                v-flex(xs6)
-                  v-card.editor-markdown-help-source(flat)
-                    v-card-text
-                      div [Link Text](https://wiki.js.org)
-                v-icon mdi-chevron-right
-                v-flex
-                  v-card.editor-markdown-help-result(flat)
-                    v-card-text
-                      .caption: a(href='https://wiki.js.org', target='_blank') Link Text
-              .body-2.mt-3 Superscript
+              //- v-layout(row)
+              //-   v-flex(xs6)
+              //-     v-card.editor-markdown-help-source(flat)
+              //-       v-card-text
+              //-         div [Link Text](https://wiki.js.org)
+              //-   v-icon mdi-chevron-right
+              //-   v-flex
+              //-     v-card.editor-markdown-help-result(flat)
+              //-       v-card-text
+              //-         .caption: a(href='https://wiki.js.org', target='_blank') Link Text
+              //- .body-2.mt-3 Superscript
               v-layout(row)
                 v-flex(xs6)
                   v-card.editor-markdown-help-source(flat)

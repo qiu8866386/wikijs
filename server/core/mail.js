@@ -63,7 +63,7 @@ module.exports = {
         logo: (WIKI.config.logoUrl.startsWith('http') ? '' : WIKI.config.host) + WIKI.config.logoUrl,
         siteTitle: WIKI.config.title,
         // copyright: WIKI.config.company.length > 0 ? WIKI.config.company : 'Powered by Wiki.js',
-        copyright: WIKI.config.company.length > 0 ? WIKI.config.company : '',
+        // copyright: WIKI.config.company.length > 0 ? WIKI.config.company : '',
         ...opts.data
       })
     })

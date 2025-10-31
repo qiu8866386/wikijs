@@ -11,7 +11,7 @@ router.post('/summarize', async (req, res) => {
   try {
     const { prompt, content, pageId } = req.body
 
-    if (!prompt || !content || !pageId) {
+    if (!content || !pageId) {
       return res.status(400).json({ error: '缺少 prompt、content 或 pageId 参数' })
     }
 

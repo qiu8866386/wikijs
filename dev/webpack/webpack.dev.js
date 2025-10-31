@@ -19,7 +19,22 @@ const babelDir = path.join(process.cwd(), '.webpack-cache/babel')
 
 process.noDeprecation = true
 
-fs.emptyDirSync(path.join(process.cwd(), 'assets'))
+// 安全地清空assets目录，跳过被锁定的文件
+try {
+  const assetsDir = path.join(process.cwd(), 'assets')
+  if (fs.existsSync(assetsDir)) {
+    const files = fs.readdirSync(assetsDir)
+    files.forEach(file => {
+      try {
+        fs.removeSync(path.join(assetsDir, file))
+      } catch (err) {
+        console.warn(`无法删除文件 ${file}: ${err.message}`)
+      }
+    })
+  }
+} catch (err) {
+  console.warn('清空assets目录时出错:', err.message)
+}
 
 module.exports = {
   mode: 'development',

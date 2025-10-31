@@ -6,7 +6,7 @@
           img.animated.fadeInUp(src='/_assets/svg/icon-paint-palette.svg', alt='Theme', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{$t('admin:theme.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:theme.subtitle')}}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('修改 智能AI文档管理平台 的外观')}}
           v-spacer
           v-btn.animated.fadeInRight(color='success', depressed, @click='save', large, :loading='loading')
             v-icon(left) mdi-check

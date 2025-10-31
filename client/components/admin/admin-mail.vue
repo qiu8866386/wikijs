@@ -108,7 +108,7 @@
                   v-toolbar(color='primary', dark, dense, flat)
                     v-toolbar-title.subtitle-1 {{ $t('admin:mail.dkim') }}
                   v-card-info
-                    span {{ $t('admin:mail.dkimHint') }}
+                    span {{ $t('DKIM（DomainKeys Identified Mail）通过为收件人提供验证域名和确保邮件真实性的方法，为从智能AI文档管理平台发送的所有电子邮件提供一层安全性') }}
                   .pa-4
                     v-switch(
                       v-model='config.useDKIM'

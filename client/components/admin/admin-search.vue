@@ -6,10 +6,10 @@
           img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', alt='Search Engine', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{$t('admin:search.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:search.subtitle')}}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('配置智能AI文档管理平台的搜索功能')}}
           v-spacer
-          v-btn.mr-3.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/search', target='_blank')
-            v-icon mdi-help-circle
+          //- v-btn.mr-3.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/search', target='_blank')
+          //-   v-icon mdi-help-circle
           v-btn.animated.fadeInDown.wait-p2s(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
           v-btn.mx-3.animated.fadeInDown.wait-p1s(color='black', dark, depressed, @click='rebuild')

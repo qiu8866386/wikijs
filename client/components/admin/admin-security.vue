@@ -118,10 +118,10 @@
                 v-toolbar(color='primary', dark, dense, flat)
                   v-toolbar-title.subtitle-1 {{ $t('admin:security.uploads') }}
                 v-card-info(color='blue')
-                  span {{$t('admin:security.uploadsInfo')}}
+                  span {{$t('这些设置只影响 智能AI文档管理平台。 如果您使用反向代理（例如 Nginx、Apache、Cloudflare），您必须更改它们的设置以生效')}}
                 v-card-text
                   v-text-field.mt-3(
-                    outlined
+                    outlineds
                     :label='$t(`admin:security.maxUploadSize`)'
                     required
                     v-model='config.uploadMaxFileSize'

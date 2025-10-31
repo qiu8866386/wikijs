@@ -203,16 +203,9 @@
                 //-     v-btn(icon, tile, v-on='on', :aria-label='$t(`common:page.bookmark`)'): v-icon(color='grey') mdi-bookmark
                 //-   span {{$t('common:page.bookmark')}}
                 v-tooltip(bottom)
-                  template(#activator="{ on, attrs }")
-                    v-btn(
-                      color="primary"
-                      icon
-                      v-bind="attrs"
-                      v-on="on"
-                      @click="viewAiSummary"
-                      aria-label="查看AI总结"
-                    )
-                      v-icon(font-size="24" color="#9e9e9e") mdi-file-chart-outline
+                  template(v-slot:activator='{ on }')
+                    v-btn(icon, tile, v-on='on', @click='viewAiSummary', aria-label='查看AI总结')
+                      v-icon(color='grey') mdi-file-chart-outline
                   span 查看AI总结
                 <!-- 添加一个测试按钮用于调试 -->
                 //- v-tooltip(bottom)
@@ -245,16 +238,9 @@
                   span {{$t('common:page.printFormat')}}
                 v-spacer
                 v-tooltip(bottom)
-                  template(#activator="{ on, attrs }")
-                    v-btn(
-                      color="primary"
-                      icon
-                      v-bind="attrs"
-                      v-on="on"
-                      @click="callOpenAI"
-                      aria-label="生成AI总结"
-                    )
-                      v-icon(font-size="24" color="#9e9e9e") mdi-file-chart-outline
+                  template(v-slot:activator='{ on }')
+                    v-btn(icon, tile, v-on='on', @click='callOpenAI', aria-label='生成AI总结')
+                      v-icon(color='grey') mdi-robot-outline
                   span 生成AI总结
                 v-spacer
           v-flex.page-col-content(
@@ -886,6 +872,7 @@ export default {
                 tags {
                   tag
                   title
+                  prompt
                 }
               }
             }
@@ -1062,6 +1049,13 @@ export default {
   .v-breadcrumbs__divider:nth-child(2) {
     padding: 0 6px 0 12px;
   }
+}
+.custom-tooltip {
+  background-color: #e4e4e4; /* 蓝色背景 */
+  color: white;              /* 白色文字 */
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
 }
 
 .page-col-sd {

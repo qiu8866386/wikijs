@@ -2,8 +2,9 @@
   v-app
     .onboarding
       .onboarding-content
-        img.animated.fadeIn(src='/_assets/svg/logo-wikijs.svg', alt='Wiki.js')
-        .headline.animated.fadeInUp {{ $t('welcome.title') }}
+        //- img.animated.fadeIn(src='/_assets/svg/logo-wikijs.svg', alt='Wiki.js')
+        //- .headline.animated.fadeInUp {{ $t('welcome.title') }}
+        .headline.animated.fadeInUp {{ $t('欢迎您访问智能AI文档管理平台') }}
         .subtitle-1.mt-3.animated.fadeInUp.wait-p1s {{ $t('welcome.subtitle') }}
         div
           v-btn.mt-5.mx-3.animated.fadeInUp.wait-p2s(color='primary', :href='`/e/` + locale + `/home`', x-large)

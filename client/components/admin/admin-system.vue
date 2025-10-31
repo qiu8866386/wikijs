@@ -11,7 +11,7 @@
           v-flex(lg6 xs12)
             v-card.animated.fadeInUp
               v-btn.animated.fadeInLeft.wait-p2s.btn-animate-rotate(fab, absolute, :right='!$vuetify.rtl', :left='$vuetify.rtl', top, small, light, @click='refresh'): v-icon(color='grey') mdi-refresh
-              v-subheader Wiki.js
+              v-subheader 系统版本
               v-list(two-line, dense)
                 v-list-item
                   v-list-item-avatar

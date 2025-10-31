@@ -20,7 +20,7 @@
     v-layout(row)
       v-flex(xs5, md4)
         v-toolbar.nav-header-inner(color='black', dark, flat, :class='$vuetify.rtl ? `pr-3` : `pl-3`')
-          v-avatar(tile, size='34', @click='goHome')
+          v-avatar(rounded, size='34', @click='goHome').logo-avatar
             v-img.org-logo(:src='logoUrl')
           //- v-menu(open-on-hover, offset-y, bottom, left, min-width='250', transition='slide-y-transition')
           //-   template(v-slot:activator='{ on }')
@@ -483,7 +483,6 @@ export default {
 </script>
 
 <style lang='scss'>
-
 .nav-header {
   //z-index: 1000;
 
@@ -499,8 +498,16 @@ export default {
     }
   }
 
+  .logo-avatar {
+    overflow: hidden; // 确保子元素被裁剪为圆形
+  }
+
   .org-logo {
     cursor: pointer;
+    border-radius: 50%; // 设置为圆形
+    width: 100%;
+    height: 100%;
+    object-fit: cover; // 确保图片填充整个容器
   }
 
   &-inner {
@@ -568,5 +575,3 @@ export default {
 .navHeaderLoading { // To avoid search bar jumping
   width: 22px;
 }
-
-</style>
