@@ -819,6 +819,27 @@ module.exports = class Page extends Model {
     await WIKI.models.pages.deletePageFromCache(page.hash)
     WIKI.events.outbound.emit('deletePageFromCache', page.hash)
 
+    // -> Delete orphaned tags (tags not associated with any pages)
+    if (WIKI.config.db.type === 'postgres') {
+      await WIKI.models.knex.raw(`
+        DELETE FROM tags
+        WHERE id NOT IN (
+          SELECT DISTINCT "tagId"
+          FROM "pageTags"
+          WHERE "tagId" IS NOT NULL
+        )
+      `)
+    } else {
+      await WIKI.models.knex.raw(`
+        DELETE FROM tags
+        WHERE id NOT IN (
+          SELECT DISTINCT tagId
+          FROM pageTags
+          WHERE tagId IS NOT NULL
+        )
+      `)
+    }
+
     // -> Rebuild page tree
     await WIKI.models.pages.rebuildTree()
 
